@@ -32,6 +32,7 @@ const inputUrlCardImage = document.querySelector('.popup__input_type_url');
 
 // @todo: DOM узлы
 const placeCards = document.querySelector('.places__list');
+
 // @todo: Функция создания карточки
 function createCard (initialCards, handleCardLikeButton, openPopupImage, deleteCard) {
     const card = cardTemplate.querySelector('.card').cloneNode(true);
@@ -115,14 +116,6 @@ popupCloseCard.addEventListener('click', () => {
 
 //popup просмотра картинки
 function openPopupImage(evt) {
-    if(evt.target) {
-    const card = document.querySelector('.card').cloneNode(true);
-    const cardImage = card.querySelector('.card__image');
-    const cardTitle = card.querySelector('.card__title');
-    popupImage.alt = cardImage.alt;
-    popupImage.src = cardImage.src;
-    popupImageCaption.textContent = cardTitle.textContent;
-    }
     openPopup(popupCardImage);
 };
 
@@ -143,7 +136,7 @@ formElement.addEventListener('submit', handleFormSubmit);
 
 
 //функция создания карточки из формы (попапа)
-function addCard(handleCardLikeButton, openPopupImage, deleteCard) {
+/*function addCard(handleCardLikeButton, openPopupImage, deleteCard) {
     const name = inputNameCardImage.value;
     const link = inputUrlCardImage.value;
 
@@ -162,7 +155,7 @@ function addCard(handleCardLikeButton, openPopupImage, deleteCard) {
     deleteButton.addEventListener('click', () => {deleteCard(deleteButton)});
 
     return card;
-}
+}*/
 
 
 function handleCardLikeButton(evt) {
@@ -172,8 +165,11 @@ function handleCardLikeButton(evt) {
 //функция добавления новой карточки из формы (попапа)
 function handleNewCardSubmit(evt) {
     evt.preventDefault();
-    const card = addCard(handleCardLikeButton, openPopupImage, deleteCard);
-    placeCards.prepend(card);
+    cardImage.src = inputUrlCardImage.value;
+    cardImage.alt = inputNameCardImage.value;
+    cardTitle.textContent = inputNameCardImage.value;
+    const newCard = createCard(card, handleCardLikeButton, openPopupImage, deleteCard);
+    placeCards.prepend(newCard);
     closePopup(popupNewCard);
 }
 
