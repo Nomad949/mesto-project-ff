@@ -1,10 +1,7 @@
 import '/src/pages/index.css';
 import {createCard, deleteCard, handleCardLikeButton} from './card.js';
-import {openPopup, closePopup, openPopupImage} from './modal.js';
+import {openPopup, closePopup} from './modal.js';
 import {initialCards} from './cards.js';
-
-//Темплейт карточки
-const cardTemplate = document.querySelector('#card-template').content;
 
 //Список карточек
 const placeCards = document.querySelector('.places__list');
@@ -18,7 +15,7 @@ const profileJob = profile.querySelector('.profile__description');
 
 //попапы
 const popupEdit = document.querySelector('.popup_type_edit');
-const popupClose = popupEdit.querySelector('.popup__close');
+const buttonCloseEditProfilePopup = popupEdit.querySelector('.popup__close');
 const popupNewCard = document.querySelector('.popup_type_new-card');
 const popupCloseCard = popupNewCard.querySelector('.popup__close');
 const popupCardImage = document.querySelector('.popup_type_image');
@@ -27,9 +24,9 @@ const popupImageCaption = popupCardImage.querySelector('.popup__caption');
 const popupCloseImage = popupCardImage.querySelector('.popup__close');
 
 //форма редактирования
-const formElement = document.forms['edit-profile'];
-const nameInput = formElement.querySelector('.popup__input_type_name');
-const jobInput = formElement.querySelector('.popup__input_type_description');
+const formEditProfile = document.forms['edit-profile'];
+const nameInput = formEditProfile.querySelector('.popup__input_type_name');
+const jobInput = formEditProfile.querySelector('.popup__input_type_description');
 
 //форма добавления карточки
 const formNewCard = document.forms['new-place'];
@@ -39,6 +36,34 @@ const inputUrlCardImage = formNewCard.querySelector('.popup__input_type_url');
 //Массив попапов
 const popupsArray = [popupEdit, popupNewCard, popupCardImage];
 
+//функция открытия попап просмотра картинки
+function openPopupImage(evt) {
+    popupImage.src = evt.target.src;
+    popupImage.alt = evt.target.alt;
+    popupImageCaption.textContent = evt.target.alt;
+    openPopup(popupCardImage);
+};
+
+//функция чтения полей из профиля отправки формы
+function submitEditProfileForm(evt) {
+    evt.preventDefault();
+    profileName.textContent = nameInput.value;
+    profileJob.textContent = jobInput.value;
+    closePopup(popupEdit);
+}
+
+//функция добавления новой карточки из формы (попапа)
+function handleNewCardSubmit(evt) {
+    evt.preventDefault();
+    const card = {};
+    card.link = inputUrlCardImage.value;
+    card.name = inputNameCardImage.value;
+    const newCard = createCard(card, handleCardLikeButton, openPopupImage, deleteCard);
+    placeCards.prepend(newCard);
+    closePopup(popupNewCard);
+    inputNameCardImage.value = '';
+    inputUrlCardImage.value = '';
+}
 
 // @todo: Вывести карточки на страницу
 initialCards.forEach(card => {
@@ -58,7 +83,7 @@ editButton.addEventListener('click', () => {
     openPopup(popupEdit);
 });
 
-popupClose.addEventListener('click', () => {
+buttonCloseEditProfilePopup.addEventListener('click', () => {
     closePopup(popupEdit);
 });
 
@@ -76,31 +101,6 @@ popupCloseImage.addEventListener('click', () => {
     closePopup(popupCardImage);
 })
 
-
-//функция чтения полей из профиля отправки формы
-function handleFormSubmit(evt) {
-    evt.preventDefault();
-    profileName.textContent = nameInput.value;
-    profileJob.textContent = jobInput.value;
-    closePopup(popupEdit);
-}
-
-formElement.addEventListener('submit', handleFormSubmit);
-    
-//функция добавления новой карточки из формы (попапа)
-function handleNewCardSubmit(evt) {
-    evt.preventDefault();
-    const card = {};
-    card.link = inputUrlCardImage.value;
-    card.name = inputNameCardImage.value;
-    const newCard = createCard(card, handleCardLikeButton, openPopupImage, deleteCard);
-    placeCards.prepend(newCard);
-    closePopup(popupNewCard);
-    inputNameCardImage.value = '';
-    inputUrlCardImage.value = '';
-}
+formEditProfile.addEventListener('submit', submitEditProfileForm);
 
 formNewCard.addEventListener('submit', handleNewCardSubmit);
-
-
-export {cardTemplate, popupCardImage, popupImage, popupImageCaption};

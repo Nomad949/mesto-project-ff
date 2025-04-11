@@ -1,5 +1,3 @@
-import {popupImageCaption, popupCardImage} from './index.js';
-
 //функции открытия и закрытия попапа
 function openPopup(popup) {
     popup.classList.add('popup_is-opened');
@@ -12,14 +10,6 @@ function closePopup(popup) {
     popup.removeEventListener('click', closePopupOverlay);
     document.removeEventListener('keydown', closePopupEsc);
 }
-
-//функция открытия попап просмотра картинки
-function openPopupImage(evt, popupImage) {
-    popupImage.src = evt.target.src;
-    popupImage.alt = evt.target.alt;
-    popupImageCaption.textContent = evt.target.alt;
-    openPopup(popupCardImage);
-};
 
 //Закрытие попапа ESC
 function closePopupEsc(evt) {
@@ -37,4 +27,4 @@ function closePopupOverlay(evt) {
     }
 }
 
-export {openPopup, closePopup, openPopupImage};
+export {openPopup, closePopup};

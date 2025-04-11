@@ -1,19 +1,20 @@
-import {cardTemplate, popupImage} from './index.js';
+//Темплейт карточки
+const cardTemplate = document.querySelector('#card-template').content;
 
 //Функция создания карточки
-function createCard (initialCards, handleCardLikeButton, openPopupImage, deleteCard) {
+function createCard (cardData, handleCardLikeButton, openPopupImage, deleteCard) {
     const card = cardTemplate.querySelector('.card').cloneNode(true);
     const cardImage = card.querySelector('.card__image');
     const cardTitle = card.querySelector('.card__title');
     const cardLikeButton = card.querySelector('.card__like-button');
     const deleteButton = card.querySelector('.card__delete-button');
 
-    cardImage.src = initialCards.link;
-    cardImage.alt = initialCards.name;
-    cardTitle.textContent = initialCards.name;
+    cardImage.src = cardData.link;
+    cardImage.alt = cardData.name;
+    cardTitle.textContent = cardData.name;
 
     cardLikeButton.addEventListener('click', handleCardLikeButton);
-    cardImage.addEventListener('click', (evt) => {openPopupImage(evt, popupImage)});
+    cardImage.addEventListener('click', (evt) => {openPopupImage(evt)});
     deleteButton.addEventListener('click', () => {deleteCard(deleteButton)});
 
     return card;
