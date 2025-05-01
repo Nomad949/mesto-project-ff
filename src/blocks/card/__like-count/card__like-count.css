@@ -1,0 +1,5 @@
+.card__like-count {
+    display: flex;
+    align-self: center;
+    font-size: 13px;
+}

@@ -9,6 +9,24 @@
   margin: 0 29px 0 0;
 }
 
+.profile__image-edit {
+  width: 120px;
+  height: 120px;
+  position: absolute;
+  background: transparent url('../../../images/edit-icon.svg') center no-repeat;
+  background-size: cover;
+  background-position: center;
+  background-size: 28px 28px;
+  background-color: rgba(0, 0, 0, 0.8);
+  cursor: pointer;
+  visibility: hidden;
+}
+
+.profile__image:hover .profile__image-edit {
+  visibility: visible;
+}
+
+
 @media screen and (max-width: 740px) {
   .profile__image {
     margin: 0 10px 0 0;

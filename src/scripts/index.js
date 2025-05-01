@@ -1,7 +1,14 @@
 import '/src/pages/index.css';
 import {createCard, deleteCard, handleCardLikeButton} from './card.js';
 import {openPopup, closePopup} from './modal.js';
-import {initialCards} from './cards.js';
+import {enableValidation, clearValidation} from './validation.js';
+import {
+    apiConfig,
+    apiGetUser,
+    apiGetInitialCards,
+    apiUpdateUserData,
+    apiAddNewCard,
+    apiUpdateUserAvatar} from './api.js';
 
 //Список карточек
 const placeCards = document.querySelector('.places__list');
@@ -12,6 +19,7 @@ const editButton = profile.querySelector('.profile__edit-button');
 const addButton = profile.querySelector('.profile__add-button');
 const profileName = profile.querySelector('.profile__title');
 const profileJob = profile.querySelector('.profile__description');
+const profileImage = profile.querySelector('.profile__image');
 
 //попапы
 const popupEdit = document.querySelector('.popup_type_edit');
@@ -22,11 +30,17 @@ const popupCardImage = document.querySelector('.popup_type_image');
 const popupImage = popupCardImage.querySelector('.popup__image');
 const popupImageCaption = popupCardImage.querySelector('.popup__caption');
 const popupCloseImage = popupCardImage.querySelector('.popup__close');
+const popupChangeAvatar = document.querySelector('.popup_type_new-avatar');
+const popupCloseAvatar = popupChangeAvatar.querySelector('.popup__close');
 
-//форма редактирования
+//форма редактирования профиля
 const formEditProfile = document.forms['edit-profile'];
 const nameInput = formEditProfile.querySelector('.popup__input_type_name');
 const jobInput = formEditProfile.querySelector('.popup__input_type_description');
+
+//форма обновления аватара
+const formUpdateAvatar = document.forms['new-avatar'];
+const inputUrlAvatar = formUpdateAvatar.querySelector('.popup__input_type_url');
 
 //форма добавления карточки
 const formNewCard = document.forms['new-place'];
@@ -34,7 +48,18 @@ const inputNameCardImage = formNewCard.querySelector('.popup__input_type_card-na
 const inputUrlCardImage = formNewCard.querySelector('.popup__input_type_url');
 
 //Массив попапов
-const popupsArray = [popupEdit, popupNewCard, popupCardImage];
+const popupsArray = Array.from(document.querySelectorAll('.popup'));
+
+const validationConfig = {
+    formSelector: '.popup__form',
+    inputSelector: '.popup__input',
+    submitButtonSelector: '.popup__button',
+    inactiveButtonClass: 'popup__button_inactive',
+    inputErrorClass: 'popup__input-error',
+    errorClassActive: 'popup__input-error_active'
+}
+
+// let userId;
 
 //функция открытия попап просмотра картинки
 function openPopupImage(evt) {
@@ -47,29 +72,77 @@ function openPopupImage(evt) {
 //функция чтения полей из профиля отправки формы
 function submitEditProfileForm(evt) {
     evt.preventDefault();
-    profileName.textContent = nameInput.value;
-    profileJob.textContent = jobInput.value;
-    closePopup(popupEdit);
+    const button = formEditProfile.querySelector('.popup__button');
+    button.disabled = true;
+    button.textContent = 'Сохранение...';
+    const newName = nameInput.value;
+    const job = jobInput.value;
+    apiUpdateUserData(apiConfig, newName, job)
+        .then((res) => {
+            profileName.textContent = res.name;
+            profileJob.textContent = res.about;
+        })
+        .catch((err) => {
+            console.log(err);
+        })
+        .finally(() => {
+            closePopup(popupEdit);
+            button.textContent = 'Сохранить';
+            button.disabled = false;
+        });
+}
+
+//функция обновления аватара
+function submitChangeAvatar(evt) {
+    evt.preventDefault();
+    const button = formUpdateAvatar.querySelector('.popup__button');
+    button.disabled = true;
+    button.textContent = 'Сохранение...';
+    const changeAvatar = inputUrlAvatar.value;
+    apiUpdateUserAvatar(apiConfig, changeAvatar)
+        .then((res) => {
+            profileImage.style.backgroundImage = `url(${res.avatar})`;
+        })
+        .catch((err) => {
+            console.log(err);
+        })
+        .finally(() => {
+            closePopup(popupChangeAvatar);
+            button.textContent = 'Сохранить';
+            button.disabled = false;
+        });
 }
 
 //функция добавления новой карточки из формы (попапа)
 function handleNewCardSubmit(evt) {
     evt.preventDefault();
+    const button = formNewCard.querySelector('.popup__button');
+    button.textContent = 'Сохранение...';
+    button.disabled = true;
     const card = {};
     card.link = inputUrlCardImage.value;
     card.name = inputNameCardImage.value;
-    const newCard = createCard(card, handleCardLikeButton, openPopupImage, deleteCard);
-    placeCards.prepend(newCard);
-    closePopup(popupNewCard);
-    inputNameCardImage.value = '';
-    inputUrlCardImage.value = '';
+    apiAddNewCard(apiConfig, card.name, card.link)
+        .then((card) => {
+            let userId;
+            const newCard = createCard(
+                card,
+                handleCardLikeButton,
+                openPopupImage,
+                deleteCard,
+                userId
+            );
+            placeCards.prepend(newCard);
+        })
+        .catch((err) => {
+            console.log(err);
+        })
+        .finally(() => {
+            closePopup(popupNewCard);
+            button.textContent = 'Сохранить';
+            button.disabled = false;
+        });
 }
-
-// @todo: Вывести карточки на страницу
-initialCards.forEach(card => {
-    const newCard = createCard(card, handleCardLikeButton, openPopupImage, deleteCard);
-    placeCards.append(newCard);
-})
 
 
 //Добавление анимации попапам
@@ -80,6 +153,7 @@ popupsArray.forEach(popup => popup.classList.add('popup_is-animated'));
 editButton.addEventListener('click', () => {
     nameInput.value = profileName.textContent;
     jobInput.value = profileJob.textContent;
+    clearValidation(popupEdit, validationConfig);
     openPopup(popupEdit);
 });
 
@@ -87,9 +161,22 @@ buttonCloseEditProfilePopup.addEventListener('click', () => {
     closePopup(popupEdit);
 });
 
+//попап для смены аватара
+profileImage.addEventListener('click', () => {
+    inputUrlAvatar.value = '';
+    clearValidation(popupChangeAvatar, validationConfig);
+    openPopup(popupChangeAvatar);
+})
 
-//попап добавления карточки c картинкой
+popupCloseAvatar.addEventListener('click', () => {
+    closePopup(popupChangeAvatar);
+})
+
+//попап добавления карточки
 addButton.addEventListener('click', () => {
+    inputNameCardImage.value = '';
+    inputUrlCardImage.value = '';
+    clearValidation(popupNewCard, validationConfig);
     openPopup(popupNewCard);
 });
 
@@ -105,79 +192,37 @@ formEditProfile.addEventListener('submit', submitEditProfileForm);
 
 formNewCard.addEventListener('submit', handleNewCardSubmit);
 
+formUpdateAvatar.addEventListener('submit', submitChangeAvatar);
+
+
+//ЗАПРОСЫ//////
+
+Promise.all([apiGetUser(apiConfig), apiGetInitialCards(apiConfig)])
+    .then(([userProfile, initialCards]) => {
+        let userId;
+        userId = userProfile._id;
+        profileImage.style.backgroundImage = `url(${userProfile.avatar})`;
+        profileName.textContent = userProfile.name;
+        profileJob.textContent = userProfile.about;
+
+        initialCards.forEach(card => {
+            const newCard = createCard(
+                card,
+                handleCardLikeButton,
+                openPopupImage,
+                deleteCard,
+                userId
+            );
+            placeCards.append(newCard);
+        });
+        console.log(initialCards);
+    })
+    .catch((err) => {
+        console.log(err);
+    });
 
 
 //ВАЛИДАЦИЯ!!!
-const showInputError = (formElement, inputElement, errorMessage) => {
-    const errorElement = formElement.querySelector(`.${inputElement.id}-error`);
-    inputElement.classList.add(enableValidation.inputErrorClass);
-    errorElement.textContent = errorMessage;
-    errorElement.classList.add(enableValidation.errorClassActive);
-}
 
-const hideInputError = (formElement, inputElement) => {
-    const errorElement = formElement.querySelector(`.${inputElement.id}-error`);
-    inputElement.classList.remove(enableValidation.inputErrorClass);
-    errorElement.classList.remove(enableValidation.errorClassActive);
-    errorElement.textContent = '';
-}
+enableValidation(validationConfig);
 
-const checkInputValidity = (formElement, inputElement) => {
-    if(inputElement.validity.patternMismatch) {
-        inputElement.setCustomValidity(inputElement.dataset.errorMessage);
-    } else {
-        inputElement.setCustomValidity('');
-    }
-    if(!inputElement.validity.valid) {
-        showInputError(formElement, inputElement, inputElement.validationMessage);
-    } else {
-        hideInputError(formElement, inputElement);
-    }
-}
-
-const hasInvalidInput = (inputList) => {
-    return inputList.some((inputElement) => {
-        return !inputElement.validity.valid;
-    })
- }
-
-const toggleButtonState = (inputList, buttonElement) => {
-    if(hasInvalidInput(inputList)) {
-        buttonElement.disabled = true;
-        buttonElement.classList.add(enableValidation.inactiveButtonClass);
-    } else {
-        buttonElement.disabled = false;
-        buttonElement.classList.remove(enableValidation.inactiveButtonClass);
-    }
-}
-
-const setEventListeners = (formElement) => {
-    const inputList = Array.from(formElement.querySelectorAll(enableValidation.inputSelector));
-    const buttonElement = formElement.querySelector(enableValidation.submitButtonSelector);
-    toggleButtonState(inputList, buttonElement);
-    inputList.forEach((inputElement) => {
-        inputElement.addEventListener('input', () => {
-            checkInputValidity(formElement, inputElement);
-            toggleButtonState(inputList, buttonElement);
-        });
-    });
-};
-
-const enableValidation = () => {
-    const formList = Array.from(document.querySelectorAll(enableValidation.formSelector));
-    formList.forEach((formElement) => {
-        formElement.addEventListener('submit', (evt) => {
-            evt.preventDefault();
-        });
-    setEventListeners(formElement);
-    });
-};
-
-enableValidation({
-    formSelector: '.popup__form',
-    inputSelector: '.popup__input',
-    submitButtonSelector: '.popup__button',
-    inactiveButtonClass: 'popup__button_inactive',
-    inputErrorClass: 'popup__input-error',
-    errorClassActive: 'popup__input-error_active'
-});
