@@ -3,7 +3,6 @@ import {createCard, deleteCard, handleCardLikeButton} from './card.js';
 import {openPopup, closePopup} from './modal.js';
 import {enableValidation, clearValidation} from './validation.js';
 import {
-    apiConfig,
     apiGetUser,
     apiGetInitialCards,
     apiUpdateUserData,
@@ -59,7 +58,7 @@ const validationConfig = {
     errorClassActive: 'popup__input-error_active'
 }
 
-// let userId;
+let userId;
 
 //функция открытия попап просмотра картинки
 function openPopupImage(evt) {
@@ -77,7 +76,7 @@ function submitEditProfileForm(evt) {
     button.textContent = 'Сохранение...';
     const newName = nameInput.value;
     const job = jobInput.value;
-    apiUpdateUserData(apiConfig, newName, job)
+    apiUpdateUserData(newName, job)
         .then((res) => {
             profileName.textContent = res.name;
             profileJob.textContent = res.about;
@@ -99,7 +98,7 @@ function submitChangeAvatar(evt) {
     button.disabled = true;
     button.textContent = 'Сохранение...';
     const changeAvatar = inputUrlAvatar.value;
-    apiUpdateUserAvatar(apiConfig, changeAvatar)
+    apiUpdateUserAvatar(changeAvatar)
         .then((res) => {
             profileImage.style.backgroundImage = `url(${res.avatar})`;
         })
@@ -119,12 +118,13 @@ function handleNewCardSubmit(evt) {
     const button = formNewCard.querySelector('.popup__button');
     button.textContent = 'Сохранение...';
     button.disabled = true;
-    const card = {};
-    card.link = inputUrlCardImage.value;
-    card.name = inputNameCardImage.value;
-    apiAddNewCard(apiConfig, card.name, card.link)
+    const card = {
+        link: inputUrlCardImage.value,
+        name: inputNameCardImage.value
+    };
+    
+    apiAddNewCard(card.name, card.link)
         .then((card) => {
-            let userId;
             const newCard = createCard(
                 card,
                 handleCardLikeButton,
@@ -197,9 +197,8 @@ formUpdateAvatar.addEventListener('submit', submitChangeAvatar);
 
 //ЗАПРОСЫ//////
 
-Promise.all([apiGetUser(apiConfig), apiGetInitialCards(apiConfig)])
+Promise.all([apiGetUser(), apiGetInitialCards()])
     .then(([userProfile, initialCards]) => {
-        let userId;
         userId = userProfile._id;
         profileImage.style.backgroundImage = `url(${userProfile.avatar})`;
         profileName.textContent = userProfile.name;
@@ -215,7 +214,6 @@ Promise.all([apiGetUser(apiConfig), apiGetInitialCards(apiConfig)])
             );
             placeCards.append(newCard);
         });
-        console.log(initialCards);
     })
     .catch((err) => {
         console.log(err);

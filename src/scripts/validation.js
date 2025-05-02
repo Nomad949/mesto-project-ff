@@ -66,7 +66,11 @@ const enableValidation = (obj) => {
 
 const clearValidation = (form, obj) => {
     const allFormInputs = form.querySelectorAll(obj.inputSelector);
+    const submitButton = form.querySelector(obj.submitButtonSelector);
    
+    submitButton.classList.add(obj.inactiveButtonClass);
+    submitButton.disabled = true;
+    
     allFormInputs.forEach((input) => {
         hideInputError(form, input, obj);
    });
